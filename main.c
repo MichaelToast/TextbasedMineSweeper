@@ -16,6 +16,7 @@ void setUpBoard(Node[][Y], int[][2]);
 void displayBoard(Node[][Y]);
 void displayBoardValues(Node[][Y]);
 void revealNode(Node[][Y], int, int);
+void floodFill(struct node[][Y], int, int);
 int hitMine(Node[][Y], int, int);
 
 int main(void) {
@@ -31,21 +32,22 @@ int main(void) {
 
   setUpBoard(board, mineLocations);
   displayBoardValues(board);
-  return -1;
+
 
   while ((alive == true || win == false) && flagCount != mineCount) { 
-    system("clear");
+    //system("clear");
+    //displayBoard(board);
 
     if (flagCount == mineCount) {
       // {Function to determine if game has been won}
     }
 
     printf("There are %d mines on the board\n", mineCount);
-
     displayBoard(board);
+
     while (userXvalue == -1 && userYvalue == -1) {
       printf("Place 'F' at beggining of your input to place/remove flag\n");
-      printf("Enter X Y Coordiates: \n");
+      printf("Enter X Y Coordiates: ");
       scanf("%d%d%c", &userXvalue, &userYvalue, &flag); 
       //5 6F
 
@@ -54,8 +56,9 @@ int main(void) {
         userXvalue = -1;
         userYvalue = -1; 
       }
+    }
 
-      else if (flag == 'f' || flag == 'F') {
+      if (flag == 'f' || flag == 'F') {
         // {Function to place/remove flag}
         printf("YOU HAVE CHOSEN TO PLACE A FLAG\n");
         userXvalue = -1;
@@ -65,22 +68,18 @@ int main(void) {
       else {
         alive = hitMine(board, userXvalue, userYvalue);
 
-        if (alive == 0) {
+        if (alive == false) {
           // {game over}
           printf("YOU HAVE HIT A MINE\n");
         }
         else {
+          revealNode(board, userXvalue, userYvalue);
           // {reveal spot}
         }
-
         userXvalue = -1;
         userYvalue = -1;
         
       }
-
-      
-    }
-  
   }
 
 
@@ -215,15 +214,33 @@ void displayBoardValues(Node board[][Y]) {
 }
 
 int hitMine(Node board[][Y], int xValue, int yValue) {
+  //plug into the 'alive' variable
   if (board[xValue][yValue].value == -1) {
-    return true;
+    return false;
   }
   else {
-    return false;
+    return true;
   }
   
 }
 
 void revealNode(Node board[][Y], int xValue, int yValue) {
   board[xValue][yValue].shown = 1;
+  if (board[xValue][yValue].value == 0) {
+    floodFill(board, xValue, yValue);
+  } 
+}
+
+void floodFill(struct node board[][Y], int x, int y)
+{
+  for (int i = -1; i < 2; i ++) {
+    for (int j = -1; j < 2; j ++) {
+      //checking if I am in bounds
+      if (x + i >= 0 && x + i < X && y + j >= 0 && y + j < Y) {
+        if (board[x + i][y + j].value != -1 && board[x + i][y + j].shown == 0) {
+          revealNode(board, (x + i), (y + j));
+        }
+      }
+    }
+  }
 }
