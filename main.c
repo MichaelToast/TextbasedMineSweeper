@@ -17,7 +17,9 @@ void displayBoard(Node[][Y]);
 void displayBoardValues(Node[][Y]);
 void revealNode(Node[][Y], int, int);
 void floodFill(struct node[][Y], int, int);
+void placeFlag(Node[][Y], int, int);
 int hitMine(Node[][Y], int, int);
+int checkWin(Node[][Y], int[][2]);
 
 int main(void) {
   srand(time(NULL));
@@ -36,7 +38,6 @@ int main(void) {
 
   while ((alive == true || win == false) && flagCount != mineCount) { 
     //system("clear");
-    //displayBoard(board);
 
     if (flagCount == mineCount) {
       // {Function to determine if game has been won}
@@ -46,7 +47,7 @@ int main(void) {
     displayBoard(board);
 
     while (userXvalue == -1 && userYvalue == -1) {
-      printf("Place 'F' at beggining of your input to place/remove flag\n");
+      printf("Place 'F' at end of your input to place/remove flag\n");
       printf("Enter X Y Coordiates: ");
       scanf("%d%d%c", &userXvalue, &userYvalue, &flag); 
       //5 6F
@@ -60,7 +61,8 @@ int main(void) {
 
       if (flag == 'f' || flag == 'F') {
         // {Function to place/remove flag}
-        printf("YOU HAVE CHOSEN TO PLACE A FLAG\n");
+        placeFlag(board, userXvalue, userYvalue);
+        flagCount ++;
         userXvalue = -1;
         userYvalue = -1;
         flag = 0;
@@ -78,13 +80,17 @@ int main(void) {
         }
         userXvalue = -1;
         userYvalue = -1;
-        
+
+        if (flagCount == mineCount) {
+          win = checkWin(board, mineLocations);
+        }
       }
   }
 
+  //user has exited the game loop, meaning they have either won or died
 
   displayBoard(board);
-  //displayBoardValues(board);
+  
   return 0;
 }
 
@@ -101,12 +107,14 @@ void setUpBoard(Node board[][Y], int mineLocations[][2]) {
 
   //placing mines
   for (int i = 0; i < mineCount; i++) {
-    mineXcoor = rand()%10 + 1;
-    mineYcoor = rand()%10 + 1;
+    mineXcoor = rand()%(X);
+    mineYcoor = rand()%(Y);
+
     if (board[mineXcoor][mineYcoor].value == 0) {
       board[mineXcoor][mineYcoor].value = -1;
       mineLocations[i][0] = mineXcoor;
       mineLocations[i][1] = mineYcoor;
+      
     }
     else {
       i--;
@@ -125,16 +133,10 @@ void setUpBoard(Node board[][Y], int mineLocations[][2]) {
         if (mineLocations[i][0] + x >= 0 && mineLocations[i][0] + x < X 
           && mineLocations[i][1] + y >= 0 && mineLocations[i][1] + y < Y)
         {
+          //Increasing the values around the mines
 
-          //I should just have it be that all the values around get increased
-
-          if(board[mineLocations[i][0] + x][mineLocations[i][1] + y].value == 0)
+          if(board[mineLocations[i][0] + x][mineLocations[i][1] + y].value != -1)
           {
-            board[mineLocations[i][0] + x][mineLocations[i][1] + y].value = 1;
-          }
-          else if (board[mineLocations[i][0] + x][mineLocations[i][1] + y].value != -1 && 
-            board[mineLocations[i][0] + x][mineLocations[i][1] + y].value != 0)
-          {            
             board[mineLocations[i][0] + x][mineLocations[i][1] + y].value = (board[mineLocations[i][0] + x][mineLocations[i][1] + y].value) + 1;
             //not a space, not a bomb. so it is a number
           }
@@ -231,8 +233,7 @@ void revealNode(Node board[][Y], int xValue, int yValue) {
   } 
 }
 
-void floodFill(struct node board[][Y], int x, int y)
-{
+void floodFill(struct node board[][Y], int x, int y) {
   for (int i = -1; i < 2; i ++) {
     for (int j = -1; j < 2; j ++) {
       //checking if I am in bounds
@@ -243,4 +244,36 @@ void floodFill(struct node board[][Y], int x, int y)
       }
     }
   }
+}
+
+void placeFlag(Node board[][Y], int xValue, int yValue) {
+  //function used to both place and remove flags
+
+  if (board[xValue][yValue].shown == 0) {
+    board[xValue][yValue].shown = 2;
+    return;
+  }
+  else if (board[xValue][yValue].shown == 2) {
+    //if the square is flagged, remove the flag
+    board[xValue][yValue].shown = 0; 
+    return;
+  }
+  
+}
+
+int checkWin(Node board[][Y], int mineLocations[][2]) {
+  //go through the mine locations and check if they are all flagged
+  int correctCount = 0;
+  for (int i = 0; i < mineCount; i ++) { 
+    if (board[(mineLocations[i][0])][(mineLocations[i][1])].shown == 2) {
+      correctCount ++;
+    }
+  }
+  if (correctCount == mineCount) {
+    return true;
+  }
+  else {
+    return false; 
+  }
+  
 }
