@@ -12,7 +12,7 @@ typedef struct node {
   int shown; // 0 = hidden, 1 = shown, 2 = flagged
 } Node;
 
-void setUpBoard(Node[][Y]);
+void setUpBoard(Node[][Y], int[][2]);
 void displayBoard(Node[][Y]);
 void displayBoardValues(Node[][Y]);
 void revealNode(Node[][Y], int, int);
@@ -20,14 +20,20 @@ int hitMine(Node[][Y], int, int);
 
 int main(void) {
   srand(time(NULL));
-  bool alive = false;
+  bool alive = true;
+  bool win = false;
   Node board[X][Y] = {0};
+  int mineLocations[mineCount][2] = {0};
   int userXvalue = -1;
   int userYvalue = -1;
   int flagCount = 0;
   char flag = 0;
 
-  while (alive == false && flagCount != mineCount) { 
+  setUpBoard(board, mineLocations);
+  displayBoardValues(board);
+  return -1;
+
+  while ((alive == true || win == false) && flagCount != mineCount) { 
     system("clear");
 
     if (flagCount == mineCount) {
@@ -83,7 +89,7 @@ int main(void) {
   return 0;
 }
 
-void setUpBoard(Node board[][Y]) {
+void setUpBoard(Node board[][Y], int mineLocations[][2]) {
   int mineXcoor = 0;
   int mineYcoor = 0;
   //setting all values to 0;
@@ -91,6 +97,50 @@ void setUpBoard(Node board[][Y]) {
     for (int j = 0; j < Y; j++) {
       board[i][j].value = 0;
       board[i][j].shown = 0;
+    }
+  }
+
+  //placing mines
+  for (int i = 0; i < mineCount; i++) {
+    mineXcoor = rand()%10 + 1;
+    mineYcoor = rand()%10 + 1;
+    if (board[mineXcoor][mineYcoor].value == 0) {
+      board[mineXcoor][mineYcoor].value = -1;
+      mineLocations[i][0] = mineXcoor;
+      mineLocations[i][1] = mineYcoor;
+    }
+    else {
+      i--;
+    }
+  }
+
+  //placig the numbers around the mines:
+  for (int i = 0; i < mineCount; i ++)
+  {
+    //checking around the mine locations
+    for (int x = -1; x < 2; x ++)
+    {
+      for (int y = -1; y < 2; y ++)
+      {
+        //if I am not out of bounds
+        if (mineLocations[i][0] + x >= 0 && mineLocations[i][0] + x < X 
+          && mineLocations[i][1] + y >= 0 && mineLocations[i][1] + y < Y)
+        {
+
+          //I should just have it be that all the values around get increased
+
+          if(board[mineLocations[i][0] + x][mineLocations[i][1] + y].value == 0)
+          {
+            board[mineLocations[i][0] + x][mineLocations[i][1] + y].value = 1;
+          }
+          else if (board[mineLocations[i][0] + x][mineLocations[i][1] + y].value != -1 && 
+            board[mineLocations[i][0] + x][mineLocations[i][1] + y].value != 0)
+          {            
+            board[mineLocations[i][0] + x][mineLocations[i][1] + y].value = (board[mineLocations[i][0] + x][mineLocations[i][1] + y].value) + 1;
+            //not a space, not a bomb. so it is a number
+          }
+        }
+      }
     }
   }
 }
@@ -150,8 +200,13 @@ void displayBoardValues(Node board[][Y]) {
         printf("\033[1;31m%i \033[0m", colNum);
         colNum ++;
       }
-      
-      printf("%i ", board[j][i].value);
+
+      if (board[j][i].value == -1) {
+        printf("b ");
+      }
+      else {
+        printf("%i ", board[j][i].value);
+      }  
 
     }
     printf("\n");
