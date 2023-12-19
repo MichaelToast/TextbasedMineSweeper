@@ -12,11 +12,14 @@ typedef struct node {
   int shown; // 0 = hidden, 1 = shown, 2 = flagged
 } Node;
 
+void setUpBoard(Node[][Y]);
 void displayBoard(Node[][Y]);
 void displayBoardValues(Node[][Y]);
+void revealNode(Node[][Y], int, int);
 int hitMine(Node[][Y], int, int);
 
 int main(void) {
+  srand(time(NULL));
   bool alive = false;
   Node board[X][Y] = {0};
   int userXvalue = -1;
@@ -78,6 +81,18 @@ int main(void) {
   displayBoard(board);
   //displayBoardValues(board);
   return 0;
+}
+
+void setUpBoard(Node board[][Y]) {
+  int mineXcoor = 0;
+  int mineYcoor = 0;
+  //setting all values to 0;
+  for (int i = 0; i < X; i ++) {
+    for (int j = 0; j < Y; j++) {
+      board[i][j].value = 0;
+      board[i][j].shown = 0;
+    }
+  }
 }
 
 void displayBoard(Node board[][Y]) {
@@ -152,4 +167,8 @@ int hitMine(Node board[][Y], int xValue, int yValue) {
     return false;
   }
   
+}
+
+void revealNode(Node board[][Y], int xValue, int yValue) {
+  board[xValue][yValue].shown = 1;
 }
