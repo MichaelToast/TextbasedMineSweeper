@@ -1,0 +1,5 @@
+< THIS FILE IS ONLY HERE TO EXPLAIN GAME INSTRUCTIONS >
+  There are 10 mines on the board
+  Your goal is to make it so there are no blank nodes left on the board, AKA uncover everything except the mines
+  You check a node by typing in: x y
+  You place/remove a flag by typing in: x yF

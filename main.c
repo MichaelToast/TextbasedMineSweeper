@@ -4,8 +4,7 @@
 #include <time.h>
 #define X 9
 #define Y 9
-
-const int mineCount = 10;
+#define mineCount 10
 
 typedef struct node {
   int value; //-1 = bomb
@@ -29,19 +28,14 @@ int main(void) {
   int mineLocations[mineCount][2] = {0};
   int userXvalue = -1;
   int userYvalue = -1;
-  int flagCount = 0;
   char flag = 0;
 
+  printf("\033[1;34mWelcome to MineSweeper!!!\033[0m\n");
+  
   setUpBoard(board, mineLocations);
-  displayBoardValues(board);
 
-
-  while ((alive == true || win == false) && flagCount != mineCount) { 
-    //system("clear");
-
-    if (flagCount == mineCount) {
-      // {Function to determine if game has been won}
-    }
+  while (alive == true && win == false) { 
+    system("clear");
 
     printf("There are %d mines on the board\n", mineCount);
     displayBoard(board);
@@ -50,47 +44,53 @@ int main(void) {
       printf("Place 'F' at end of your input to place/remove flag\n");
       printf("Enter X Y Coordiates: ");
       scanf("%d%d%c", &userXvalue, &userYvalue, &flag); 
-      //5 6F
-
+      //Coordinates Entered:x y
+      
       if (userXvalue > X || userYvalue > Y || userXvalue < 0 || userYvalue < 0) {
-        printf("\033[1;31mINVALID COORDINATE \033[0m");
+        printf("\033[1;31mINVALID COORDINATE \033[0m\n");
         userXvalue = -1;
         userYvalue = -1; 
       }
     }
 
-      if (flag == 'f' || flag == 'F') {
-        // {Function to place/remove flag}
-        placeFlag(board, userXvalue, userYvalue);
-        flagCount ++;
-        userXvalue = -1;
-        userYvalue = -1;
-        flag = 0;
+    if (flag == 'f' || flag == 'F') {
+      placeFlag(board, userXvalue, userYvalue);
+      userXvalue = -1;
+      userYvalue = -1;
+      flag = 0;
+      }
+    else {
+      alive = hitMine(board, userXvalue, userYvalue);
+
+      if (alive == false) {
+        printf("YOU HAVE HIT A MINE\n");
+        break;
       }
       else {
-        alive = hitMine(board, userXvalue, userYvalue);
-
-        if (alive == false) {
-          // {game over}
-          printf("YOU HAVE HIT A MINE\n");
-        }
-        else {
-          revealNode(board, userXvalue, userYvalue);
-          // {reveal spot}
-        }
-        userXvalue = -1;
-        userYvalue = -1;
-
-        if (flagCount == mineCount) {
-          win = checkWin(board, mineLocations);
-        }
+        revealNode(board, userXvalue, userYvalue);
       }
+      userXvalue = -1;
+      userYvalue = -1;
+      }
+
+    win = checkWin(board, mineLocations);
+    
   }
 
-  //user has exited the game loop, meaning they have either won or died
-
-  displayBoard(board);
-  
+  system("clear");
+  if (win == true) {
+    printf("\033[1;34mCONGRATULATIONS!!!\033[0m\n"); 
+    displayBoardValues(board);
+    printf("\033[1;34mYou win!!!\033[0m\n"); 
+    printf("\033[1;34mThanks for playing\033[0m\n");
+  }
+  else if (alive == false) {
+    printf("\033[1;31mYOU HIT A MINE \033[0m\n");
+    displayBoardValues(board);
+    printf("\033[1;31mGame Over\033[0m\n");
+    printf("\033[1;34mThanks for playing\033[0m\n"); 
+  }
+  printf("If you would like to play again, please restart the program");
   return 0;
 }
 
@@ -114,7 +114,6 @@ void setUpBoard(Node board[][Y], int mineLocations[][2]) {
       board[mineXcoor][mineYcoor].value = -1;
       mineLocations[i][0] = mineXcoor;
       mineLocations[i][1] = mineYcoor;
-      
     }
     else {
       i--;
@@ -134,7 +133,6 @@ void setUpBoard(Node board[][Y], int mineLocations[][2]) {
           && mineLocations[i][1] + y >= 0 && mineLocations[i][1] + y < Y)
         {
           //Increasing the values around the mines
-
           if(board[mineLocations[i][0] + x][mineLocations[i][1] + y].value != -1)
           {
             board[mineLocations[i][0] + x][mineLocations[i][1] + y].value = (board[mineLocations[i][0] + x][mineLocations[i][1] + y].value) + 1;
@@ -170,7 +168,7 @@ void displayBoard(Node board[][Y]) {
         printf("%i ", board[j][i].value);
       }
       else if (board[j][i].shown == 2) {
-        printf("F ");
+        printf("\033[1;35mF \033[0m");
       }
       else {
         printf("- ");
@@ -203,7 +201,7 @@ void displayBoardValues(Node board[][Y]) {
       }
 
       if (board[j][i].value == -1) {
-        printf("b ");
+        printf("B ");
       }
       else {
         printf("%i ", board[j][i].value);
@@ -213,17 +211,6 @@ void displayBoardValues(Node board[][Y]) {
     printf("\n");
   }
 
-}
-
-int hitMine(Node board[][Y], int xValue, int yValue) {
-  //plug into the 'alive' variable
-  if (board[xValue][yValue].value == -1) {
-    return false;
-  }
-  else {
-    return true;
-  }
-  
 }
 
 void revealNode(Node board[][Y], int xValue, int yValue) {
@@ -248,32 +235,48 @@ void floodFill(struct node board[][Y], int x, int y) {
 
 void placeFlag(Node board[][Y], int xValue, int yValue) {
   //function used to both place and remove flags
-
   if (board[xValue][yValue].shown == 0) {
     board[xValue][yValue].shown = 2;
     return;
   }
   else if (board[xValue][yValue].shown == 2) {
-    //if the square is flagged, remove the flag
     board[xValue][yValue].shown = 0; 
+    return;
+  }
+  else {
     return;
   }
   
 }
 
-int checkWin(Node board[][Y], int mineLocations[][2]) {
-  //go through the mine locations and check if they are all flagged
-  int correctCount = 0;
-  for (int i = 0; i < mineCount; i ++) { 
-    if (board[(mineLocations[i][0])][(mineLocations[i][1])].shown == 2) {
-      correctCount ++;
-    }
-  }
-  if (correctCount == mineCount) {
-    return true;
+int hitMine(Node board[][Y], int xValue, int yValue) {
+  //plug into the 'alive' variable
+  if (board[xValue][yValue].value == -1) {
+    return false;
   }
   else {
-    return false; 
+    return true;
+  }
+}
+
+int checkWin(Node board[][Y], int mineLocations[][2]) {
+  int count = 0; 
+
+  //game of minesweeper is won once you clear all the spaces that are not mines
+  for (int i = 0; i < 8; i ++) { 
+    for (int j = 0; j < 8; j ++) {
+      if ((board[i][j].shown == 0 || board[i][j].shown == 2) && board[i][j].value != -1) {
+        //If hidden (with a flag or not), and it is not a mine, increase the count
+        count ++;
+      }
+    }
+  }
+  if (count == 0) { 
+    //this means that there are NO blank spaces over things that are not a mine
+    return 1;
+  }
+  else {
+    return 0;
   }
   
 }
